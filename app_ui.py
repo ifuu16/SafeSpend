@@ -39,8 +39,9 @@ with tab1:
     # ===== CSV MODE =====
     if input_mode == "📁 Upload CSV":
         uploaded_file = st.file_uploader("Upload your transactions", type=["csv"])
-
+    
         if uploaded_file is not None:
+            st.session_state["uploaded_csv"] = uploaded_file  # store it
             df = pd.read_csv(uploaded_file)
             summary = compute_financial_summary(df)
             st.success("File loaded ✅")
@@ -86,60 +87,57 @@ with tab1:
     item = st.text_input("What do you want to buy?")
     cost = st.number_input("Cost (¥)", value=0.0)
 
-    if st.button("Can I afford this?"):
+    # ===== DECISION BUTTON =====
+if st.button("Can I afford this?"):
 
-        # ===== VALIDATION =====
-        if not item or cost <= 0:
-            st.warning("Enter a valid item and cost.")
+    # ===== VALIDATION =====
+    if not item or cost <= 0:
+        st.warning("Enter a valid item and cost.")
+        st.stop()
+
+    # ===== BUILD SUMMARY FROM SESSION =====
+    if input_mode == "📁 Upload CSV":
+        uploaded_file = st.session_state.get("uploaded_csv")
+        if uploaded_file is None:
+            st.warning("Please upload a CSV file first.")
             st.stop()
+        uploaded_file.seek(0)
+        df = load_transactions(uploaded_file)
+        summary = compute_financial_summary(df)
 
-        # ===== BUILD SUMMARY BASED ON MODE =====
-        if input_mode == "📁 Upload CSV":
+    else:  # ⚡ MANUAL MODE
+        manual_tx = st.session_state.get("manual_transactions", [])
+        if len(manual_tx) == 0:
+            st.warning("Please add at least one transaction first.")
+            st.stop()
+        df = pd.DataFrame(manual_tx)
+        summary = compute_financial_summary(df)
 
-            if uploaded_file is None:
-                st.warning("Please upload a CSV file.")
-                st.stop()
+    # ===== DECISION =====
+    result = evaluate_affordability(summary, cost)
 
-            df = load_transactions(uploaded_file)
+    expense_df = df[df["amount"] < 0].copy()
+    expense_df["amount"] = expense_df["amount"].abs()
+    category_spending = expense_df.groupby("category")["amount"].sum()
+    
+    # Chart for income vs expenses
+    chart_data = pd.DataFrame({
+        "Type": ["Income", "Expenses"],
+        "Amount": [summary["monthly_income"], summary["monthly_expenses"]]
+    }).set_index("Type")
 
-            if "manual_expenses" in st.session_state:
-                manual_df = pd.DataFrame(st.session_state["manual_expenses"])
-                df = pd.concat([df, manual_df], ignore_index=True)
+    # Store in session_state
+    st.session_state.update({
+        "summary": summary,
+        "result": result,
+        "chart_data": chart_data,
+        "category_spending": category_spending,
+        "item": item,
+        "cost": cost
+    })
 
-            summary = compute_financial_summary(df)
-
-            expense_df = df[df["amount"] < 0].copy()
-            expense_df["amount"] = expense_df["amount"].abs()
-            category_spending = expense_df.groupby("category")["amount"].sum()
-
-        else:  # ⚡ MANUAL MODE
-
-            if "manual_transactions" not in st.session_state or len(st.session_state["manual_transactions"]) == 0:
-                st.warning("Please add at least one transaction.")
-                st.stop()
-
-            df = pd.DataFrame(st.session_state["manual_transactions"])
-            summary = compute_financial_summary(df)
-
-            expense_df = df[df["amount"] < 0].copy()
-            expense_df["amount"] = expense_df["amount"].abs()
-            category_spending = expense_df.groupby("category")["amount"].sum()
-
-        # ===== DECISION =====
-        result = evaluate_affordability(summary, cost)
-
-        chart_data = pd.DataFrame({
-            "Type": ["Income", "Expenses"],
-            "Amount": [summary["monthly_income"], summary["monthly_expenses"]]
-        }).set_index("Type")
-
-        # ===== STORE =====
-        st.session_state["summary"] = summary
-        st.session_state["result"] = result
-        st.session_state["category_spending"] = category_spending
-        st.session_state["chart_data"] = chart_data
-        st.session_state["item"] = item
-        st.session_state["cost"] = cost
+    st.success(f"✅ Decision computed for {item}")
+        
 with tab2:
     st.subheader("📊 Financial Overview")
 
