@@ -12,29 +12,24 @@ tab1, tab2, tab3 = st.tabs(["🛍️ Decision", "📊 Dashboard", "💬 Feedback
  ])
 
 
-# Initialize a session state list to store feedback
-if "feedback_list" not in st.session_state:
-    st.session_state.feedback_list = []
 with tab3:
     st.subheader("💬 Help Us Improve.\n We'd appreciate your Honest Feedback")
-
     st.markdown("Takes a minute👇")
 
     feedback = st.text_area("What confused you or could be better?")
-
     rating = st.slider("How useful is this app?", 1, 5, 3)
 
     if st.button("Submit Feedback"):
-        # Save feedback to session_state
-        st.session_state.feedback_list.append({"feedback": feedback, "rating": rating})
+        # Save feedback for later use
+        st.session_state.setdefault("feedback_list", [])
+        st.session_state["feedback_list"].append({"feedback": feedback, "rating": rating})
+
+        # Optionally save to CSV so you can see it outside the app
+        import pandas as pd
+        df = pd.DataFrame(st.session_state["feedback_list"])
+        df.to_csv("feedback_responses.csv", index=False)
+
         st.success("Thanks! 🙌")
-
-    # Display all feedback submitted during this session
-    if st.session_state.feedback_list:
-        st.markdown("### All Feedback Submitted This Session")
-        df = pd.DataFrame(st.session_state.feedback_list)
-        st.dataframe(df)
-
 # --- Input Section ---
 with tab1:
     st.subheader("🛍️ Purchase Decision")
