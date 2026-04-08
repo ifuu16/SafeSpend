@@ -1,0 +1,34 @@
+date,description,amount,category
+2024-01-01,Salary,4500.00,Income
+2024-01-05,Rent,-1200.00,Housing
+2024-01-08,Groceries,-180.00,Food
+2024-01-10,Netflix,-15.99,Entertainment
+2024-01-12,Electricity,-85.00,Utilities
+2024-01-15,Gym Membership,-45.00,Health
+2024-01-18,Restaurant,-62.00,Food
+2024-01-22,Gas,-55.00,Transport
+2024-01-25,Phone Bill,-40.00,Utilities
+2024-01-28,Coffee Shop,-32.00,Food
+2024-02-01,Salary,4500.00,Income
+2024-02-01,Freelance Project,800.00,Income
+2024-02-04,Rent,-1200.00,Housing
+2024-02-07,Groceries,-195.00,Food
+2024-02-09,Netflix,-15.99,Entertainment
+2024-02-11,Electricity,-90.00,Utilities
+2024-02-14,Valentine Dinner,-120.00,Food
+2024-02-15,Gym Membership,-45.00,Health
+2024-02-19,Gas,-48.00,Transport
+2024-02-22,Clothing,-150.00,Shopping
+2024-02-25,Phone Bill,-40.00,Utilities
+2024-02-28,Coffee Shop,-28.00,Food
+2024-03-01,Salary,4500.00,Income
+2024-03-03,Rent,-1200.00,Housing
+2024-03-06,Groceries,-170.00,Food
+2024-03-09,Netflix,-15.99,Entertainment
+2024-03-11,Electricity,-78.00,Utilities
+2024-03-14,Gym Membership,-45.00,Health
+2024-03-16,Books,-35.00,Education
+2024-03-20,Gas,-52.00,Transport
+2024-03-22,Restaurant,-75.00,Food
+2024-03-25,Phone Bill,-40.00,Utilities
+2024-03-28,Coffee Shop,-25.00,Food
