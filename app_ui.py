@@ -11,6 +11,10 @@ st.caption("Make smarter spending decisions instantly")
 tab1, tab2, tab3 = st.tabs(["🛍️ Decision", "📊 Dashboard", "💬 Feedback"
  ])
 
+
+# Initialize a session state list to store feedback
+if "feedback_list" not in st.session_state:
+    st.session_state.feedback_list = []
 with tab3:
     st.subheader("💬 Help Us Improve.\n We'd appreciate your Honest Feedback")
 
@@ -21,7 +25,15 @@ with tab3:
     rating = st.slider("How useful is this app?", 1, 5, 3)
 
     if st.button("Submit Feedback"):
+        # Save feedback to session_state
+        st.session_state.feedback_list.append({"feedback": feedback, "rating": rating})
         st.success("Thanks! 🙌")
+
+    # Display all feedback submitted during this session
+    if st.session_state.feedback_list:
+        st.markdown("### All Feedback Submitted This Session")
+        df = pd.DataFrame(st.session_state.feedback_list)
+        st.dataframe(df)
 
 # --- Input Section ---
 with tab1:
@@ -88,55 +100,55 @@ with tab1:
     cost = st.number_input("Cost (¥)", value=0.0)
 
     # ===== DECISION BUTTON =====
-if st.button("Can I afford this?"):
+    if  st.button("Can I afford this?"):
 
-    # ===== VALIDATION =====
-    if not item or cost <= 0:
-        st.warning("Enter a valid item and cost.")
-        st.stop()
-
-    # ===== BUILD SUMMARY FROM SESSION =====
-    if input_mode == "📁 Upload CSV":
-        uploaded_file = st.session_state.get("uploaded_csv")
-        if uploaded_file is None:
-            st.warning("Please upload a CSV file first.")
+        # ===== VALIDATION =====
+        if not item or cost <= 0:
+            st.warning("Enter a valid item and cost.")
             st.stop()
-        uploaded_file.seek(0)
-        df = load_transactions(uploaded_file)
-        summary = compute_financial_summary(df)
 
-    else:  # ⚡ MANUAL MODE
-        manual_tx = st.session_state.get("manual_transactions", [])
-        if len(manual_tx) == 0:
-            st.warning("Please add at least one transaction first.")
-            st.stop()
-        df = pd.DataFrame(manual_tx)
-        summary = compute_financial_summary(df)
+        # ===== BUILD SUMMARY FROM SESSION =====
+        if input_mode == "📁 Upload CSV":
+            uploaded_file = st.session_state.get("uploaded_csv")
+            if uploaded_file is None:
+                st.warning("Please upload a CSV file first.")
+                st.stop()
+            uploaded_file.seek(0)
+            df = load_transactions(uploaded_file)
+            summary = compute_financial_summary(df)
 
-    # ===== DECISION =====
-    result = evaluate_affordability(summary, cost)
+        else:  # ⚡ MANUAL MODE
+            manual_tx = st.session_state.get("manual_transactions", [])
+            if len(manual_tx) == 0:
+                st.warning("Please add at least one transaction first.")
+                st.stop()
+            df = pd.DataFrame(manual_tx)
+            summary = compute_financial_summary(df)
 
-    expense_df = df[df["amount"] < 0].copy()
-    expense_df["amount"] = expense_df["amount"].abs()
-    category_spending = expense_df.groupby("category")["amount"].sum()
-    
-    # Chart for income vs expenses
-    chart_data = pd.DataFrame({
-        "Type": ["Income", "Expenses"],
-        "Amount": [summary["monthly_income"], summary["monthly_expenses"]]
-    }).set_index("Type")
+        # ===== DECISION =====
+        result = evaluate_affordability(summary, cost)
 
-    # Store in session_state
-    st.session_state.update({
-        "summary": summary,
-        "result": result,
-        "chart_data": chart_data,
-        "category_spending": category_spending,
-        "item": item,
-        "cost": cost
-    })
+        expense_df = df[df["amount"] < 0].copy()
+        expense_df["amount"] = expense_df["amount"].abs()
+        category_spending = expense_df.groupby("category")["amount"].sum()
+        
+        # Chart for income vs expenses
+        chart_data = pd.DataFrame({
+            "Type": ["Income", "Expenses"],
+            "Amount": [summary["monthly_income"], summary["monthly_expenses"]]
+        }).set_index("Type")
 
-    st.success(f"✅ Decision computed for {item}")
+        # Store in session_state
+        st.session_state.update({
+            "summary": summary,
+            "result": result,
+            "chart_data": chart_data,
+            "category_spending": category_spending,
+            "item": item,
+            "cost": cost
+        })
+
+        st.success(f"✅ Decision computed for {item}")
         
 with tab2:
     st.subheader("📊 Financial Overview")
